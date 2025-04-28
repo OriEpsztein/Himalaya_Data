@@ -138,19 +138,29 @@ elif table_choice == "📊 Plotting":
     st.subheader("Expedition Insights - Top 10 Peaks")
     
     # ---------- First Graph: Expeditions count ----------
-    exp_counts = df_combined_top10['PKNAME'].value_counts().reset_index()
-    exp_counts.columns = ['PeakName', 'ExpeditionCount']
-
+       # Group by PKNAME to get total expeditions and total members
+    exp_counts = df_combined_top10.groupby('PKNAME').agg({
+        'EXPID': 'count',
+        'TOTMEMBERS': 'sum'
+    }).reset_index()
+    
+    exp_counts.columns = ['PeakName', 'ExpeditionCount', 'TotalMembers']
+    
+    # Create the bar plot with two bars side-by-side (Expeditions + TotalMembers)
     fig = px.bar(
-        exp_counts,
+        exp_counts.melt(id_vars='PeakName', value_vars=['ExpeditionCount', 'TotalMembers']),
         x='PeakName',
-        y='ExpeditionCount',
-        title='Number of Expeditions per Peak (Top 10)',
-        labels={'PeakName': 'Peak', 'ExpeditionCount': 'Expeditions'},
+        y='value',
+        color='variable',
+        barmode='group',
+        title='Number of Expeditions and Total Members per Peak (Top 10)',
+        labels={'PeakName': 'Peak', 'value': 'Count', 'variable': 'Metric'},
         height=500
     )
+    
     fig.update_layout(xaxis_tickangle=-45)
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 
