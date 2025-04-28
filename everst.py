@@ -10,7 +10,7 @@ def get_base64_of_bin_file(bin_file_path):
         data = f.read()
     return base64.b64encode(data).decode()
 
-img_path = "mountain_background.png"
+img_path = "mou.png"
 img_base64 = get_base64_of_bin_file(img_path)
 
 st.markdown(
