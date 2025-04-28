@@ -56,8 +56,8 @@ peaks_path = r"C:\Users\ofirhadar\Downloads\Himalayan Database\Himalayan Databas
 exped_path = r"C:\Users\ofirhadar\Downloads\Himalayan Database\Himalayan Database\HIMDATA\exped.dbf"
 
 # Load data
-df_peaks = load_df(peaks_path)
-df_exped = load_df(exped_path)
+peaks_path = "peaks.dbf"
+exped_path = "exped.dbf"
 
 # ---------- Combine Data ----------
 peaks_cols = ['PEAKID', 'PKNAME', 'HEIGHTM']
