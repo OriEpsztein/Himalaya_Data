@@ -138,7 +138,7 @@ elif table_choice == "📊 Plotting":
     st.subheader("Expedition Insights - Top 10 Peaks")
     
     # ---------- First Graph: Expeditions count ----------
-       # Group by PKNAME to get total expeditions and total members
+      # Group by PKNAME to get total expeditions and total members
     exp_counts = df_combined_top10.groupby('PKNAME').agg({
         'EXPID': 'count',
         'TOTMEMBERS': 'sum'
@@ -146,20 +146,59 @@ elif table_choice == "📊 Plotting":
     
     exp_counts.columns = ['PeakName', 'ExpeditionCount', 'TotalMembers']
     
-    # Create the bar plot with two bars side-by-side (Expeditions + TotalMembers)
-    fig = px.bar(
-        exp_counts.melt(id_vars='PeakName', value_vars=['ExpeditionCount', 'TotalMembers']),
-        x='PeakName',
-        y='value',
-        color='variable',
+    # Calculate average members per expedition
+    exp_counts['AvgMembersPerExpedition'] = exp_counts['TotalMembers'] / exp_counts['ExpeditionCount']
+    
+    # Start figure
+    import plotly.graph_objects as go
+    
+    fig = go.Figure()
+    
+    # Add Expedition Count Bar
+    fig.add_trace(go.Bar(
+        x=exp_counts['PeakName'],
+        y=exp_counts['ExpeditionCount'],
+        name='Expeditions',
+        yaxis='y1'
+    ))
+    
+    # Add Total Members Bar
+    fig.add_trace(go.Bar(
+        x=exp_counts['PeakName'],
+        y=exp_counts['TotalMembers'],
+        name='Total Members',
+        yaxis='y1'
+    ))
+    
+    # Add Average Members per Expedition (scatter) on second Y axis
+    fig.add_trace(go.Scatter(
+        x=exp_counts['PeakName'],
+        y=exp_counts['AvgMembersPerExpedition'],
+        name='Avg Members per Expedition',
+        mode='lines+markers',
+        yaxis='y2'
+    ))
+    
+    # Layout with dual y-axes
+    fig.update_layout(
+        title='Expeditions, Total Members, and Average Team Size per Peak',
+        xaxis=dict(title='Peak Name', tickangle=-45),
+        yaxis=dict(
+            title='Count (Expeditions / Total Members)',
+            side='left'
+        ),
+        yaxis2=dict(
+            title='Average Members per Expedition',
+            overlaying='y',
+            side='right'
+        ),
         barmode='group',
-        title='Number of Expeditions and Total Members per Peak (Top 10)',
-        labels={'PeakName': 'Peak', 'value': 'Count', 'variable': 'Metric'},
-        height=500
+        height=600,
+        legend=dict(x=0.5, y=1.1, orientation='h', xanchor='center')
     )
     
-    fig.update_layout(xaxis_tickangle=-45)
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 
