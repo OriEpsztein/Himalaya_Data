@@ -52,12 +52,15 @@ def load_df(path):
     return pd.DataFrame(DBF(path, load=True, encoding='latin1'))
 
 # File paths
-peaks_path = r"C:\Users\ofirhadar\Downloads\Himalayan Database\Himalayan Database\HIMDATA\peaks.dbf"
-exped_path = r"C:\Users\ofirhadar\Downloads\Himalayan Database\Himalayan Database\HIMDATA\exped.dbf"
-
-# Load data
 peaks_path = "peaks.dbf"
 exped_path = "exped.dbf"
+
+# Load data
+df_peaks = load_df(peaks_path)
+df_exped = load_df(exped_path)
+
+
+
 
 # ---------- Combine Data ----------
 peaks_cols = ['PEAKID', 'PKNAME', 'HEIGHTM']
