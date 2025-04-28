@@ -3,6 +3,7 @@ import pandas as pd
 import base64
 from dbfread import DBF
 import plotly.express as px
+import plotly.graph_objects as go
 
 # ---------- Background Image Setup ----------
 def get_base64_of_bin_file(bin_file_path):
@@ -13,29 +14,30 @@ def get_base64_of_bin_file(bin_file_path):
 img_path = "mou.png"
 img_base64 = get_base64_of_bin_file(img_path)
 
+# ---------- Dark Mode Styling ----------
 st.markdown(
     f"""
     <style>
     .stApp {{
-        background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
                     url("data:image/png;base64,{img_base64}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }}
     .main > div {{
-        background-color: rgba(255, 255, 255, 0.85);
+        background-color: rgba(20, 20, 20, 0.85);
         padding: 2rem;
         border-radius: 1rem;
-        box-shadow: 0px 0px 10px rgba(0,0,0,0.25);
+        box-shadow: 0px 0px 10px rgba(255,255,255,0.15);
     }}
     .block-container {{
         max-width: 95% !important;
         padding-left: 3rem;
         padding-right: 3rem;
     }}
-    h1, p {{
-        color: #111;
+    h1, h2, h3, h4, h5, h6, p, li, span {{
+        color: #f5f5f5;
     }}
     </style>
     """,
@@ -58,9 +60,6 @@ exped_path = "exped.dbf"
 # Load data
 df_peaks = load_df(peaks_path)
 df_exped = load_df(exped_path)
-
-
-
 
 # ---------- Combine Data ----------
 peaks_cols = ['PEAKID', 'PKNAME', 'HEIGHTM']
@@ -111,66 +110,36 @@ elif table_choice == "Expeditions":
 
 elif table_choice == "Top 10 Peaks (Combined)":
     st.subheader("🏔️ Top 10 Peaks by Expedition Count")
-    with st.expander("ℹ️ Explanation of Expedition Variables"):
-        st.markdown("""
-         **🗂 Columns Explained**
-        - `EXPID`: Unique expedition ID.
-        - `PEAKID`: Code used to identify the mountain peak.
-        - `PKNAME`: Name of the peak (e.g., Everest, Lhotse).
-        - `HEIGHTM`: Elevation of the peak in meters.
-        - `HIGHPOINT`: The highest altitude reached during the expedition.
-        - `YEAR`: Year the expedition took place.
-        - `SEASON`: Season of the expedition (Spring, Summer, Autumn, Winter).
-        - `NATION`: Nationality of the expedition team.
-        - `SPONSOR`: Whether the expedition had official sponsorship (True/False).
-        - `SUCCESS1` to `SUCCESS4`: Climbing success codes.
-        - `SMTDAYS`: Days taken to reach the summit.
-        - `TOTDAYS`: Total duration of the expedition.
-        - `TERMREASON`: Reason the expedition ended (e.g., Summit, Accident, Bad Weather).
-        - `TOTMEMBERS`: Number of team members.
-        - `MDEATHS`: Number of member deaths.
-        - `O2USED`: Whether supplemental oxygen was used.
-        - `CAMPS`: Number of camps above basecamp.
-        """)
     st.dataframe(df_combined_top10)
 
 elif table_choice == "📊 Plotting":
     st.subheader("Expedition Insights - Top 10 Peaks")
-    
-    # ---------- First Graph: Expeditions count ----------
-      # Group by PKNAME to get total expeditions and total members
+
+    # ---------- First Graph: Expeditions, Total Members, Avg Members ----------
     exp_counts = df_combined_top10.groupby('PKNAME').agg({
         'EXPID': 'count',
         'TOTMEMBERS': 'sum'
     }).reset_index()
     
     exp_counts.columns = ['PeakName', 'ExpeditionCount', 'TotalMembers']
-    
-    # Calculate average members per expedition
     exp_counts['AvgMembersPerExpedition'] = exp_counts['TotalMembers'] / exp_counts['ExpeditionCount']
     
-    # Start figure
-    import plotly.graph_objects as go
-    
     fig = go.Figure()
-    
-    # Add Expedition Count Bar
+
     fig.add_trace(go.Bar(
         x=exp_counts['PeakName'],
         y=exp_counts['ExpeditionCount'],
         name='Expeditions',
         yaxis='y1'
     ))
-    
-    # Add Total Members Bar
+
     fig.add_trace(go.Bar(
         x=exp_counts['PeakName'],
         y=exp_counts['TotalMembers'],
         name='Total Members',
         yaxis='y1'
     ))
-    
-    # Add Average Members per Expedition (scatter) on second Y axis
+
     fig.add_trace(go.Scatter(
         x=exp_counts['PeakName'],
         y=exp_counts['AvgMembersPerExpedition'],
@@ -178,58 +147,41 @@ elif table_choice == "📊 Plotting":
         mode='lines+markers',
         yaxis='y2'
     ))
-    
-    # Layout with dual y-axes
+
     fig.update_layout(
         title='Expeditions, Total Members, and Average Team Size per Peak',
         xaxis=dict(title='Peak Name', tickangle=-45),
-        yaxis=dict(
-            title='Count (Expeditions / Total Members)',
-            side='left'
-        ),
-        yaxis2=dict(
-            title='Average Members per Expedition',
-            overlaying='y',
-            side='right'
-        ),
+        yaxis=dict(title='Count (Expeditions / Total Members)', side='left'),
+        yaxis2=dict(title='Average Members per Expedition', overlaying='y', side='right'),
         barmode='group',
         height=600,
-        legend=dict(x=0.5, y=1.1, orientation='h', xanchor='center')
+        legend=dict(x=0.5, y=1.1, orientation='h', xanchor='center'),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font_color='white'
     )
-    
+
     st.plotly_chart(fig, use_container_width=True)
 
-
-
-
-
-    # ---------- Expeditions per Peak by Season (Horizontal Colored Stacked Bar with Correct Color Map) ----------
+    # ---------- Expeditions per Peak by Season ----------
     st.markdown("### Expeditions per Peak by Season")
 
-    # Count expeditions per Peak and Season
     exp_counts_season = df_combined_top10.groupby(['PKNAME', 'SEASON']).size().reset_index(name='ExpeditionCount')
-
-    # Define color map for numeric SEASON
     season_colors = {
-        0: 'black',
-        1: '#2E8B57',
-        2: 'blue',
-        3: '#FF8C00',
-        4: '#9370DB'
+        '0': 'black',
+        '1': '#2E8B57',
+        '2': 'blue',
+        '3': '#FF8C00',
+        '4': '#9370DB'
     }
-
-    # Turn SEASON to string, because Plotly requires that for color_discrete_map
     exp_counts_season['SEASON'] = exp_counts_season['SEASON'].astype(str)
-
-    # Update the color map keys to strings too
-    season_colors = {str(k): v for k, v in season_colors.items()}
 
     fig2 = px.bar(
         exp_counts_season,
         x='ExpeditionCount',
         y='PKNAME',
         color='SEASON',
-        color_discrete_map=season_colors,  # <- Custom colors applied
+        color_discrete_map=season_colors,
         orientation='h',
         title='Expeditions per Peak by Season (Top 10 Peaks)',
         labels={'PKNAME': 'Peak', 'ExpeditionCount': 'Expeditions', 'SEASON': 'Season'},
@@ -238,11 +190,13 @@ elif table_choice == "📊 Plotting":
 
     fig2.update_layout(
         yaxis=dict(categoryorder='total ascending'),
-        barmode='stack'
+        barmode='stack',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font_color='white'
     )
 
     st.plotly_chart(fig2, use_container_width=True)
-
 
     # ---------- Third Graph: Average HIGHPOINT vs HEIGHTM ----------
     st.markdown("### Average Highpoint per Peak vs Official Height")
@@ -267,21 +221,23 @@ elif table_choice == "📊 Plotting":
     )
 
     fig3.update_layout(
-    xaxis_tickangle=-45,
-    yaxis_range=[5000, 10000]  # Start at 5000, no max limit (auto) 
+        xaxis_tickangle=-45,
+        yaxis_range=[5000, 10000],
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font_color='white'
     )
+
     st.plotly_chart(fig3, use_container_width=True)
 
-    # ---------- Fifth Graph: Sunburst of Members and Deaths per Peak ----------
+    # ---------- Sunburst Chart: Total Members and Deaths ----------
     st.markdown("### Total Members and Deaths per Peak")
 
-    # Prepare data: rectangular DataFrame
     peak_stats = df_combined_top10.groupby('PKNAME').agg({
         'TOTMEMBERS': 'sum',
         'MDEATHS': 'sum'
     }).reset_index()
 
-    # Melt it into long format: "PeakName", "Type", "Value"
     sunburst_df = peak_stats.melt(
         id_vars='PKNAME',
         value_vars=['TOTMEMBERS', 'MDEATHS'],
@@ -289,17 +245,18 @@ elif table_choice == "📊 Plotting":
         value_name='Value'
     )
 
-    # Build Sunburst
     fig5 = px.sunburst(
         sunburst_df,
-        path=['PKNAME', 'Type'],  # hierarchy
+        path=['PKNAME', 'Type'],
         values='Value',
         title='Total Members and Deaths per Peak',
         height=700
     )
 
+    fig5.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font_color='white'
+    )
+
     st.plotly_chart(fig5, use_container_width=True)
-
-
-
-        
