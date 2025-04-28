@@ -10,7 +10,7 @@ def get_base64_of_bin_file(bin_file_path):
         data = f.read()
     return base64.b64encode(data).decode()
 
-img_path = r"C:\Users\ofirhadar\Downloads\20250411_1030_Mountain Peak Climbers_remix_01jrhw14rpe6brpmfnsmgfnnjz.png"
+img_path = "mountain_background.png"
 img_base64 = get_base64_of_bin_file(img_path)
 
 st.markdown(
