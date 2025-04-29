@@ -48,9 +48,6 @@ st.title("Himalayan Database Viewer")
 st.markdown("Explore peaks, expeditions, and filtered insights from the Himalayan Database.")
 
 # ---------- Load Optimized Data ----------
-@st.cache_data
-def load_exped():
-    return pd.read_parquet("exped.parquet")
 
 @st.cache_data
 def load_peaks():
