@@ -26,7 +26,7 @@ st.markdown(
         background-attachment: fixed;
     }}
     .main > div {{
-        background-color: rgba(40, 40, 40, 0.75);
+        background-color: rgba(20, 20, 20, 0.85);
         padding: 2rem;
         border-radius: 1rem;
         box-shadow: 0px 0px 10px rgba(255,255,255,0.15);
