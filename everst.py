@@ -96,17 +96,17 @@ df_combined_top10['SPONSOR'] = df_combined_top10['SPONSOR'].apply(lambda x: bool
 # ---------- Sidebar Table Selector ----------
 table_choice = st.sidebar.selectbox(
     "📁 Navigation Menu",
-    ["Peaks", "Expeditions", "Top 10 Peaks (Combined)", "📊 Plotting"]
+    ["Expeditions", "Peaks","Top 10 Peaks (Combined)", "📊 Plotting"]
 )
 
 # ---------- Display Table ----------
-if table_choice == "Peaks":
-    st.subheader("🗻 Peaks Table")
-    st.dataframe(df_peaks)
-
-elif table_choice == "Expeditions":
+if table_choice == "Expeditions":
     st.subheader("📋 Expeditions Table")
     st.dataframe(df_exped)
+
+elif table_choice == "Peaks":
+    st.subheader("🗻 Peaks Table"")
+    st.dataframe(df_peaks)
 
 elif table_choice == "Top 10 Peaks (Combined)":
     st.subheader("🏔️ Top 10 Peaks by Expedition Count")
