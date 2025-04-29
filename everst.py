@@ -53,7 +53,6 @@ st.markdown("Explore peaks, expeditions, and filtered insights from the Himalaya
 def load_peaks():
     return pd.read_parquet("peaks.parquet")
 
-df_exped = load_exped()
 df_peaks = load_peaks()
 
 # ---------- Combine Data ----------
