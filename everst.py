@@ -19,14 +19,14 @@ st.markdown(
     f"""
     <style>
     .stApp {{
-        background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
                     url("data:image/png;base64,{img_base64}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }}
     .main > div {{
-        background-color: rgba(20, 20, 20, 0.85);
+        background-color: rgba(40, 40, 40, 0.75);
         padding: 2rem;
         border-radius: 1rem;
         box-shadow: 0px 0px 10px rgba(255,255,255,0.15);
