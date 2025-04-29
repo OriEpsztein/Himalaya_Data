@@ -89,27 +89,14 @@ df_combined_top10['SPONSOR'] = df_combined_top10['SPONSOR'].apply(lambda x: bool
 # ---------- Sidebar ----------
 table_choice = st.sidebar.selectbox(
     "📁 Navigation Menu",
-    ["📊 Plotting","Expeditions", "Peaks", "Top 10 Peaks (Combined)"]
+    ["📊 Plotting", "Peaks", "Top 10 Peaks (Combined)"]
 )
 
-# ---------- Display Table ----------
-if table_choice == "PLOTING":
+# ---------- Display Table or Plots ----------
+if table_choice == "📊 Plotting":
     st.subheader("Expedition Insights - Top 10 Peaks")
 
-elif table_choice == "Peaks":
-    st.subheader("🗻 Peaks Table")
-    st.dataframe(df_peaks)
-
-elif table_choice == "Top 10 Peaks (Combined)":
-    st.subheader("🏔️ Top 10 Peaks by Expedition Count")
-    st.dataframe(df_combined_top10)
-
-
-elif table_choice == "📊 Expeditions":
-    st.subheader("📋 Expeditions Table")
-    st.dataframe(df_exped)
-
-    # ---------- Graph 1: Expeditions, Members, Avg Team Size ----------
+    # ---------- Graph 1: Expeditions, Members, Avg Members ----------
     exp_counts = df_combined_top10.groupby('PKNAME').agg({
         'EXPID': 'count',
         'TOTMEMBERS': 'sum'
@@ -135,7 +122,6 @@ elif table_choice == "📊 Expeditions":
         plot_bgcolor='rgba(30,30,30,1)',
         font_color='white'
     )
-
     st.plotly_chart(fig, use_container_width=True)
 
     # ---------- Graph 2: Expeditions per Peak by Season ----------
@@ -215,3 +201,11 @@ elif table_choice == "📊 Expeditions":
         font_color='white'
     )
     st.plotly_chart(fig5, use_container_width=True)
+
+elif table_choice == "Peaks":
+    st.subheader("🗻 Peaks Table")
+    st.dataframe(df_peaks)
+
+elif table_choice == "Top 10 Peaks (Combined)":
+    st.subheader("🏔️ Top 10 Peaks by Expedition Count")
+    st.dataframe(df_combined_top10)
