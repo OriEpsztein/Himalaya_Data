@@ -89,7 +89,7 @@ df_combined_top10['SPONSOR'] = df_combined_top10['SPONSOR'].apply(lambda x: bool
 # ---------- Sidebar ----------
 table_choice = st.sidebar.selectbox(
     "📁 Navigation Menu",
-    ["Expeditions", "Peaks", "Top 10 Peaks (Combined)", "📊 Plotting"]
+    ["📊 Plotting","Expeditions", "Peaks", "Top 10 Peaks (Combined)"]
 )
 
 # ---------- Display Table ----------
