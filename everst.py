@@ -1,18 +1,17 @@
 import streamlit as st
 import pandas as pd
 import base64
-from dbfread import DBF
 import plotly.express as px
 import plotly.graph_objects as go
 
 # ---------- Background Image Setup ----------
-def get_base64_of_bin_file(bin_file_path):
-    with open(bin_file_path, 'rb') as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
+@st.cache_data
+def get_base64_image(path):
+    with open(path, 'rb') as f:
+        return base64.b64encode(f.read()).decode()
 
 img_path = "mou.png"
-img_base64 = get_base64_of_bin_file(img_path)
+img_base64 = get_base64_image(img_path)
 
 # ---------- Dark Mode Styling ----------
 st.markdown(
@@ -48,18 +47,17 @@ st.markdown(
 st.title("Himalayan Database Viewer")
 st.markdown("Explore peaks, expeditions, and filtered insights from the Himalayan Database.")
 
-# ---------- Load DBF Files ----------
+# ---------- Load Optimized Data ----------
 @st.cache_data
-def load_df(path):
-    return pd.DataFrame(DBF(path, load=True, encoding='latin1'))
+def load_exped():
+    return pd.read_parquet("exped.parquet")
 
-# File paths
-peaks_path = "peaks.dbf"
-exped_path = "exped.dbf"
+@st.cache_data
+def load_peaks():
+    return pd.read_parquet("peaks.parquet")
 
-# Load data
-df_peaks = load_df(peaks_path)
-df_exped = load_df(exped_path)
+df_exped = load_exped()
+df_peaks = load_peaks()
 
 # ---------- Combine Data ----------
 peaks_cols = ['PEAKID', 'PKNAME', 'HEIGHTM']
@@ -73,10 +71,8 @@ exped_cols = [
 ]
 df_exped_subset = df_exped[exped_cols]
 
-# Merge
 df_combined = pd.merge(df_exped_subset, df_peaks_subset, on='PEAKID', how='left')
 
-# Reorder columns
 ordered_columns = [
     'EXPID', 'PEAKID', 'PKNAME', 'HEIGHTM', 'HIGHPOINT',
     'YEAR', 'SEASON', 'NATION', 'SPONSOR',
@@ -86,17 +82,14 @@ ordered_columns = [
 ]
 df_combined = df_combined[ordered_columns]
 
-# ---------- Filter for Top 10 Peaks ----------
 top_peaks = df_combined['PEAKID'].value_counts().head(10).index.tolist()
 df_combined_top10 = df_combined[df_combined['PEAKID'].isin(top_peaks)].copy()
-
-# Convert SPONSOR to boolean: True if non-empty
 df_combined_top10['SPONSOR'] = df_combined_top10['SPONSOR'].apply(lambda x: bool(str(x).strip()))
 
-# ---------- Sidebar Table Selector ----------
+# ---------- Sidebar ----------
 table_choice = st.sidebar.selectbox(
     "📁 Navigation Menu",
-    ["Expeditions", "Peaks","Top 10 Peaks (Combined)", "📊 Plotting"]
+    ["Expeditions", "Peaks", "Top 10 Peaks (Combined)", "📊 Plotting"]
 )
 
 # ---------- Display Table ----------
@@ -115,38 +108,19 @@ elif table_choice == "Top 10 Peaks (Combined)":
 elif table_choice == "📊 Plotting":
     st.subheader("Expedition Insights - Top 10 Peaks")
 
-    # ---------- First Graph: Expeditions, Total Members, Avg Members ----------
+    # ---------- Graph 1: Expeditions, Members, Avg Team Size ----------
     exp_counts = df_combined_top10.groupby('PKNAME').agg({
         'EXPID': 'count',
         'TOTMEMBERS': 'sum'
     }).reset_index()
-    
     exp_counts.columns = ['PeakName', 'ExpeditionCount', 'TotalMembers']
     exp_counts['AvgMembersPerExpedition'] = exp_counts['TotalMembers'] / exp_counts['ExpeditionCount']
-    
+
     fig = go.Figure()
-
-    fig.add_trace(go.Bar(
-        x=exp_counts['PeakName'],
-        y=exp_counts['ExpeditionCount'],
-        name='Expeditions',
-        yaxis='y1'
-    ))
-
-    fig.add_trace(go.Bar(
-        x=exp_counts['PeakName'],
-        y=exp_counts['TotalMembers'],
-        name='Total Members',
-        yaxis='y1'
-    ))
-
-    fig.add_trace(go.Scatter(
-        x=exp_counts['PeakName'],
-        y=exp_counts['AvgMembersPerExpedition'],
-        name='Avg Members per Expedition',
-        mode='lines+markers',
-        yaxis='y2'
-    ))
+    fig.add_trace(go.Bar(x=exp_counts['PeakName'], y=exp_counts['ExpeditionCount'], name='Expeditions', yaxis='y1'))
+    fig.add_trace(go.Bar(x=exp_counts['PeakName'], y=exp_counts['TotalMembers'], name='Total Members', yaxis='y1'))
+    fig.add_trace(go.Scatter(x=exp_counts['PeakName'], y=exp_counts['AvgMembersPerExpedition'],
+                             name='Avg Members per Expedition', mode='lines+markers', yaxis='y2'))
 
     fig.update_layout(
         title='Expeditions, Total Members, and Average Team Size per Peak',
@@ -156,24 +130,17 @@ elif table_choice == "📊 Plotting":
         barmode='group',
         height=600,
         legend=dict(x=0.5, y=1.1, orientation='h', xanchor='center'),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(30,30,30,1)',
+        plot_bgcolor='rgba(30,30,30,1)',
         font_color='white'
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # ---------- Expeditions per Peak by Season ----------
+    # ---------- Graph 2: Expeditions per Peak by Season ----------
     st.markdown("### Expeditions per Peak by Season")
-
     exp_counts_season = df_combined_top10.groupby(['PKNAME', 'SEASON']).size().reset_index(name='ExpeditionCount')
-    season_colors = {
-        '0': 'black',
-        '1': '#2E8B57',
-        '2': 'blue',
-        '3': '#FF8C00',
-        '4': '#9370DB'
-    }
+    season_colors = {'0': 'black', '1': '#2E8B57', '2': 'blue', '3': '#FF8C00', '4': '#9370DB'}
     exp_counts_season['SEASON'] = exp_counts_season['SEASON'].astype(str)
 
     fig2 = px.bar(
@@ -187,18 +154,16 @@ elif table_choice == "📊 Plotting":
         labels={'PKNAME': 'Peak', 'ExpeditionCount': 'Expeditions', 'SEASON': 'Season'},
         height=700
     )
-
     fig2.update_layout(
         yaxis=dict(categoryorder='total ascending'),
         barmode='stack',
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(30,30,30,1)',
+        plot_bgcolor='rgba(30,30,30,1)',
         font_color='white'
     )
-
     st.plotly_chart(fig2, use_container_width=True)
 
-    # ---------- Third Graph: Average HIGHPOINT vs HEIGHTM ----------
+    # ---------- Graph 3: Average HIGHPOINT vs HEIGHTM ----------
     st.markdown("### Average Highpoint per Peak vs Official Height")
     avg_highpoint = df_combined_top10.groupby(['PKNAME', 'HEIGHTM'])['HIGHPOINT'].mean().reset_index()
     avg_highpoint.columns = ['PeakName', 'Height_m', 'Avg_Highpoint_m']
@@ -211,7 +176,6 @@ elif table_choice == "📊 Plotting":
         labels={'Avg_Highpoint_m': 'Average Highpoint (m)', 'PeakName': 'Peak'},
         height=500
     )
-
     fig3.add_scatter(
         x=avg_highpoint['PeakName'],
         y=avg_highpoint['Height_m'],
@@ -219,31 +183,23 @@ elif table_choice == "📊 Plotting":
         name='Official Peak Height (m)',
         line=dict(dash='dash')
     )
-
     fig3.update_layout(
         xaxis_tickangle=-45,
         yaxis_range=[5000, 10000],
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(30,30,30,1)',
+        plot_bgcolor='rgba(30,30,30,1)',
         font_color='white'
     )
-
     st.plotly_chart(fig3, use_container_width=True)
 
-    # ---------- Sunburst Chart: Total Members and Deaths ----------
+    # ---------- Graph 4: Sunburst Chart ----------
     st.markdown("### Total Members and Deaths per Peak")
-
     peak_stats = df_combined_top10.groupby('PKNAME').agg({
         'TOTMEMBERS': 'sum',
         'MDEATHS': 'sum'
     }).reset_index()
-
-    sunburst_df = peak_stats.melt(
-        id_vars='PKNAME',
-        value_vars=['TOTMEMBERS', 'MDEATHS'],
-        var_name='Type',
-        value_name='Value'
-    )
+    sunburst_df = peak_stats.melt(id_vars='PKNAME', value_vars=['TOTMEMBERS', 'MDEATHS'],
+                                  var_name='Type', value_name='Value')
 
     fig5 = px.sunburst(
         sunburst_df,
@@ -252,11 +208,9 @@ elif table_choice == "📊 Plotting":
         title='Total Members and Deaths per Peak',
         height=700
     )
-
     fig5.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(30,30,30,1)',
+        plot_bgcolor='rgba(30,30,30,1)',
         font_color='white'
     )
-
     st.plotly_chart(fig5, use_container_width=True)
