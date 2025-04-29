@@ -93,9 +93,8 @@ table_choice = st.sidebar.selectbox(
 )
 
 # ---------- Display Table ----------
-if table_choice == "Expeditions":
-    st.subheader("📋 Expeditions Table")
-    st.dataframe(df_exped)
+if table_choice == "PLOTING":
+    st.subheader("Expedition Insights - Top 10 Peaks")
 
 elif table_choice == "Peaks":
     st.subheader("🗻 Peaks Table")
@@ -105,8 +104,10 @@ elif table_choice == "Top 10 Peaks (Combined)":
     st.subheader("🏔️ Top 10 Peaks by Expedition Count")
     st.dataframe(df_combined_top10)
 
-elif table_choice == "📊 Plotting":
-    st.subheader("Expedition Insights - Top 10 Peaks")
+
+elif table_choice == "📊 Expeditions":
+    st.subheader("📋 Expeditions Table")
+    st.dataframe(df_exped)
 
     # ---------- Graph 1: Expeditions, Members, Avg Team Size ----------
     exp_counts = df_combined_top10.groupby('PKNAME').agg({
