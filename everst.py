@@ -105,7 +105,7 @@ if table_choice == "Expeditions":
     st.dataframe(df_exped)
 
 elif table_choice == "Peaks":
-    st.subheader("🗻 Peaks Table"")
+    st.subheader("🗻 Peaks Table")
     st.dataframe(df_peaks)
 
 elif table_choice == "Top 10 Peaks (Combined)":
